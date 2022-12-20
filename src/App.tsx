@@ -1,7 +1,16 @@
 import React from "react";
+import LocationButton from "./components/LocationButton";
+import MapContainer from "./components/MapContainer";
+import SearchBar from "./components/SearchBar";
 
 function App() {
-  return <div className="text-3xl font-bold underline">Hello world</div>;
+  return (
+    <div className="relative flex flex-row justify-center">
+      <LocationButton />
+      <SearchBar />
+      <MapContainer />
+    </div>
+  );
 }
 
 export default App;
