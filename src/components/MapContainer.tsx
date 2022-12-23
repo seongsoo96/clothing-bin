@@ -1,71 +1,136 @@
-import React, { useEffect } from "react";
-const { kakao } = window;
+import React, { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import gwanakJson from "../files/gwanak.json";
+import gwanakJson1 from "../files/gwanak1.json";
+import gwanakJson2 from "../files/gwanak2.json";
+import gwanakJson3 from "../files/gwanak3.json";
+import gwangjinJson from "../files/gwangjin.json";
+import dongjakJson from "../files/dongjak.json";
+import mapoJson from "../files/mapo.json";
+import yangcheonJson1 from "../files/yangcheon1.json";
+import yangcheonJson2 from "../files/yangcheon2.json";
+import seodaemun from "../files/seodaemun.json";
+import seodaemun1 from "../files/seodaemun1.json";
+import seodaemun2 from "../files/seodaemun2.json";
+// import seocho from "../files/seocho.json";
+import gangnam1 from "../files/gangnam1.json";
+import gangnam2 from "../files/gangnam2.json";
+import jungnang1 from "../files/jungnang1.json";
+import jungnang2 from "../files/jungnang2.json";
 
+import useMarker from "../hooks/useMarker";
+
+import gwanakCoords from "../files/coordsGwanak.json";
+import jongroCoords from "../files/coordsJongro.json";
+import guroCoords from "../files/coordsGuro.json";
+import gwangjinCoords from "../files/coordsGwangjin.json";
+import mapoCoords from "../files/coordsMapo.json";
+import dongjakCoords from "../files/coordsDongjak.json";
+import yangcheonCoords from "../files/coordsYangcheon.json";
+import yeongdeungpoCoords from "../files/coordsYeongdeungpo.json";
+import seodaemunCoords from "../files/coordsSeodaemun.json";
+import geumcheonCoords from "../files/coordsGeumcheon.json";
+import seochoCoords from "../files/coordsSeocho.json";
+import gangnamCoords from "../files/coordsGangnam.json";
+import jungnangCoords from "../files/coordsJungnang.json";
+
+const { kakao } = window;
 declare global {
   interface Window {
     kakao: any;
   }
 }
+interface IAddr {
+  address: {};
+  address_name: string;
+  address_type: string;
+  road_address: {};
+  x: string;
+  y: string;
+}
+
+interface IAddrs extends Array<IAddr> {}
+
+interface IJson {
+  위치: string;
+  의류수거함: string;
+}
+
+interface IJsons extends Array<IJson> {}
+
+interface IAreaCoords {
+  x: number;
+  y: number;
+}
+
+interface IAreaCoordsArr extends Array<IAreaCoords> {}
 
 export default function MapContainer() {
+  //   const [area, setArea] = useState(jungnang2.data);
+  const geocoder = new kakao.maps.services.Geocoder();
+  const hello: any = [];
+
+  const gwanak = JSON.stringify(gwanakCoords);
+  const jongro = JSON.stringify(jongroCoords);
+  const guro = JSON.stringify(guroCoords);
+  const gwangjin = JSON.stringify(gwangjinCoords);
+  const mapo = JSON.stringify(mapoCoords);
+  const dongjak = JSON.stringify(dongjakCoords);
+  const yangcheon = JSON.stringify(yangcheonCoords);
+  const yeongdeungpo = JSON.stringify(yeongdeungpoCoords);
+  const seodaemun = JSON.stringify(seodaemunCoords);
+  const geumcheon = JSON.stringify(geumcheonCoords);
+  const seocho = JSON.stringify(seochoCoords);
+  const gangnam = JSON.stringify(gangnamCoords);
+  const jungnang = JSON.stringify(jungnangCoords);
+
+  const [map, setMap] = useState();
   useEffect(() => {
     const container = document.getElementById("map");
     const options = {
-      center: new kakao.maps.LatLng(33.450701, 126.570667),
-      level: 3,
+      center: new kakao.maps.LatLng(37.566535, 126.97796919),
+      level: 8,
     };
-    const map = new kakao.maps.Map(container, options);
-
-    // HTML5의 geolocation으로 사용할 수 있는지 확인합니다
-    if (navigator.geolocation) {
-      // GeoLocation을 이용해서 접속 위치를 얻어옵니다
-      navigator.geolocation.getCurrentPosition(function (position) {
-        var lat = position.coords.latitude, // 위도
-          lon = position.coords.longitude; // 경도
-
-        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
-          message = '<div style="padding:5px;">여기에 계신가요?!</div>'; // 인포윈도우에 표시될 내용입니다
-
-        // 마커와 인포윈도우를 표시합니다
-        displayMarker(locPosition, message, map);
-      });
-    } else {
-      // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
-
-      var locPosition = new kakao.maps.LatLng(33.450701, 126.570667),
-        message = "geolocation을 사용할수 없어요..";
-
-      displayMarker(locPosition, message, map);
-    }
-
-    // const positions = [
-    //   {
-    //     title: "카카오",
-    //     latlng: new kakao.maps.LatLng(33.450705, 126.570677),
-    //   },
-    //   {
-    //     title: "생태연못",
-    //     latlng: new kakao.maps.LatLng(33.450936, 126.569477),
-    //   },
-    //   {
-    //     title: "텃밭",
-    //     latlng: new kakao.maps.LatLng(33.450879, 126.56994),
-    //   },
-    //   {
-    //     title: "근린공원",
-    //     latlng: new kakao.maps.LatLng(33.451393, 126.570738),
-    //   },
-    // ];
-
-    // for (let i = 0; i < positions.length; i++) {
-    //   // 마커를 생성합니다
-    //   const marker = new kakao.maps.Marker({
-    //     map: map, // 마커를 표시할 지도
-    //     position: positions[i].latlng, // 마커를 표시할 위치
-    //     title: positions[i].title, // 마커의 타이틀, 마커에 마우스를 올리면 타이틀이 표시됩니다
-    //   });
-    // }
+    setMap(new kakao.maps.Map(container, options));
   }, []);
+  useMarker(gwanak, map);
+  useMarker(jongro, map);
+  useMarker(guro, map);
+  useMarker(gwangjin, map);
+  useMarker(mapo, map);
+  useMarker(dongjak, map);
+  useMarker(yangcheon, map);
+  useMarker(yeongdeungpo, map);
+  useMarker(seodaemun, map);
+  useMarker(geumcheon, map);
+  useMarker(seocho, map);
+  useMarker(gangnam, map);
+  useMarker(jungnang, map);
+
+  //   useEffect(() => {
+  //     const apiCall = async () => {
+  //       for (const addr of area) {
+  //         await geocoder.addressSearch(
+  //           addr["위치"],
+  //           function (result: IAddrs, status: string) {
+  //             if (status === kakao.maps.services.Status.OK) {
+  //               hello.push({ y: result[0].y, x: result[0].x });
+  //             } else {
+  //               console.log("안됨!!!");
+  //             }
+  //           }
+  //         );
+  //       }
+  //     };
+
+  //     apiCall();
+  //     setTimeout(() => {
+  //       let jsonEncode = JSON.stringify(hello);
+  //       let jsonDecode = JSON.parse(jsonEncode);
+  //       console.log(jsonDecode);
+  //       console.log(jsonEncode);
+  //     }, 15000);
+  //   }, [area, geocoder, hello]);
 
   return (
     <div
