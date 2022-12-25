@@ -7,17 +7,15 @@ declare global {
   }
 }
 
-interface IJson {
-  위치: string;
-  의류수거함: string;
-}
+// interface IJson {
+//   위치: string;
+//   의류수거함: string;
+// }
 
-interface IAreaCoords {
-  x: number;
-  y: number;
-}
-
-interface IAreaCoordsArr extends Array<IAreaCoords> {}
+// interface IAreaCoords {
+//   x: number;
+//   y: number;
+// }
 
 export default function useMarker(jsonString: string, map: any) {
   const areaCoords = JSON.parse(jsonString);
@@ -49,4 +47,6 @@ export default function useMarker(jsonString: string, map: any) {
       });
     }
   }, [areaCoords]);
+
+  return {};
 }
