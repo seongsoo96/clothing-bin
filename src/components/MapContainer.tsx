@@ -1,38 +1,39 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import gwanakJson from "../files/gwanak.json";
-import gwanakJson1 from "../files/gwanak1.json";
-import gwanakJson2 from "../files/gwanak2.json";
-import gwanakJson3 from "../files/gwanak3.json";
-import gwangjinJson from "../files/gwangjin.json";
-import dongjakJson from "../files/dongjak.json";
-import mapoJson from "../files/mapo.json";
-import yangcheonJson1 from "../files/yangcheon1.json";
-import yangcheonJson2 from "../files/yangcheon2.json";
-import seodaemun from "../files/seodaemun.json";
-import seodaemun1 from "../files/seodaemun1.json";
-import seodaemun2 from "../files/seodaemun2.json";
-// import seocho from "../files/seocho.json";
-import gangnam1 from "../files/gangnam1.json";
-import gangnam2 from "../files/gangnam2.json";
-import jungnang1 from "../files/jungnang1.json";
-import jungnang2 from "../files/jungnang2.json";
+import gwanakJson from "../assets/gwanak.json";
+import gwanakJson1 from "../assets/gwanak1.json";
+import gwanakJson2 from "../assets/gwanak2.json";
+import gwanakJson3 from "../assets/gwanak3.json";
+import gwangjinJson from "../assets/gwangjin.json";
+import dongjakJson from "../assets/dongjak.json";
+import mapoJson from "../assets/mapo.json";
+import yangcheonJson1 from "../assets/yangcheon1.json";
+import yangcheonJson2 from "../assets/yangcheon2.json";
+import seodaemun from "../assets/seodaemun.json";
+import seodaemun1 from "../assets/seodaemun1.json";
+import seodaemun2 from "../assets/seodaemun2.json";
+// import seocho from "../assets/seocho.json";
+import gangnam1 from "../assets/gangnam1.json";
+import gangnam2 from "../assets/gangnam2.json";
+import jungnang1 from "../assets/jungnang1.json";
+import jungnang2 from "../assets/jungnang2.json";
 
 import useMarker from "../hooks/useMarker";
 
-import gwanakCoords from "../files/coordsGwanak.json";
-import jongroCoords from "../files/coordsJongro.json";
-import guroCoords from "../files/coordsGuro.json";
-import gwangjinCoords from "../files/coordsGwangjin.json";
-import mapoCoords from "../files/coordsMapo.json";
-import dongjakCoords from "../files/coordsDongjak.json";
-import yangcheonCoords from "../files/coordsYangcheon.json";
-import yeongdeungpoCoords from "../files/coordsYeongdeungpo.json";
-import seodaemunCoords from "../files/coordsSeodaemun.json";
-import geumcheonCoords from "../files/coordsGeumcheon.json";
-import seochoCoords from "../files/coordsSeocho.json";
-import gangnamCoords from "../files/coordsGangnam.json";
-import jungnangCoords from "../files/coordsJungnang.json";
+import gwanakCoords from "../assets/coordsGwanak.json";
+import jongroCoords from "../assets/coordsJongro.json";
+import guroCoords from "../assets/coordsGuro.json";
+import gwangjinCoords from "../assets/coordsGwangjin.json";
+import mapoCoords from "../assets/coordsMapo.json";
+import dongjakCoords from "../assets/coordsDongjak.json";
+import yangcheonCoords from "../assets/coordsYangcheon.json";
+import yeongdeungpoCoords from "../assets/coordsYeongdeungpo.json";
+import seodaemunCoords from "../assets/coordsSeodaemun.json";
+import geumcheonCoords from "../assets/coordsGeumcheon.json";
+import seochoCoords from "../assets/coordsSeocho.json";
+import gangnamCoords from "../assets/coordsGangnam.json";
+import jungnangCoords from "../assets/coordsJungnang.json";
+import allCoords from "../assets/coordsAll.json";
 
 const { kakao } = window;
 declare global {
@@ -65,47 +66,49 @@ interface IAreaCoords {
 
 interface IAreaCoordsArr extends Array<IAreaCoords> {}
 
-export default function MapContainer() {
+export default function MapContainer({ map }: { map: any }) {
   //   const [area, setArea] = useState(jungnang2.data);
   const geocoder = new kakao.maps.services.Geocoder();
   const hello: any = [];
 
-  const gwanak = JSON.stringify(gwanakCoords);
-  const jongro = JSON.stringify(jongroCoords);
-  const guro = JSON.stringify(guroCoords);
-  const gwangjin = JSON.stringify(gwangjinCoords);
-  const mapo = JSON.stringify(mapoCoords);
-  const dongjak = JSON.stringify(dongjakCoords);
-  const yangcheon = JSON.stringify(yangcheonCoords);
-  const yeongdeungpo = JSON.stringify(yeongdeungpoCoords);
-  const seodaemun = JSON.stringify(seodaemunCoords);
-  const geumcheon = JSON.stringify(geumcheonCoords);
-  const seocho = JSON.stringify(seochoCoords);
-  const gangnam = JSON.stringify(gangnamCoords);
-  const jungnang = JSON.stringify(jungnangCoords);
+  // const gwanak = JSON.stringify(gwanakCoords);
+  // const jongro = JSON.stringify(jongroCoords);
+  // const guro = JSON.stringify(guroCoords);
+  // const gwangjin = JSON.stringify(gwangjinCoords);
+  // const mapo = JSON.stringify(mapoCoords);
+  // const dongjak = JSON.stringify(dongjakCoords);
+  // const yangcheon = JSON.stringify(yangcheonCoords);
+  // const yeongdeungpo = JSON.stringify(yeongdeungpoCoords);
+  // const seodaemun = JSON.stringify(seodaemunCoords);
+  // const geumcheon = JSON.stringify(geumcheonCoords);
+  // const seocho = JSON.stringify(seochoCoords);
+  // const gangnam = JSON.stringify(gangnamCoords);
+  // const jungnang = JSON.stringify(jungnangCoords);
+  const all = JSON.stringify(allCoords);
 
-  const [map, setMap] = useState();
-  useEffect(() => {
-    const container = document.getElementById("map");
-    const options = {
-      center: new kakao.maps.LatLng(37.566535, 126.97796919),
-      level: 8,
-    };
-    setMap(new kakao.maps.Map(container, options));
-  }, []);
-  useMarker(gwanak, map);
-  useMarker(jongro, map);
-  useMarker(guro, map);
-  useMarker(gwangjin, map);
-  useMarker(mapo, map);
-  useMarker(dongjak, map);
-  useMarker(yangcheon, map);
-  useMarker(yeongdeungpo, map);
-  useMarker(seodaemun, map);
-  useMarker(geumcheon, map);
-  useMarker(seocho, map);
-  useMarker(gangnam, map);
-  useMarker(jungnang, map);
+  // const [map, setMap] = useState();
+  // useEffect(() => {
+  //   const container = document.getElementById("map");
+  //   const options = {
+  //     center: new kakao.maps.LatLng(37.566535, 126.97796919),
+  //     level: 8,
+  //   };
+  //   setMap(new kakao.maps.Map(container, options));
+  // }, []);
+  // useMarker(gwanak, map);
+  // useMarker(jongro, map);
+  // useMarker(guro, map);
+  // useMarker(gwangjin, map);
+  // useMarker(mapo, map);
+  // useMarker(dongjak, map);
+  // useMarker(yangcheon, map);
+  // useMarker(yeongdeungpo, map);
+  // useMarker(seodaemun, map);
+  // useMarker(geumcheon, map);
+  // useMarker(seocho, map);
+  // useMarker(gangnam, map);
+  // useMarker(jungnang, map);
+  useMarker(all, map);
 
   //   useEffect(() => {
   //     const apiCall = async () => {

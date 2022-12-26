@@ -16,23 +16,22 @@ function App() {
   //   center: any;
   //   level: number;
   // }>();
-  // const [map, setMap] = useState<{ map: any }>();
 
-  // useEffect(() => {
-  // setContainer(document.getElementById("map"));
-
-  // const options = {
-  //   center: new kakao.maps.LatLng(33.450701, 126.570667),
-  //   level: 6,
-  // };
-  // const map = new kakao.maps.Map(container, options);
-  // },[])
+  const [map, setMap] = useState();
+  useEffect(() => {
+    const container = document.getElementById("map");
+    const options = {
+      center: new kakao.maps.LatLng(37.566535, 126.97796919),
+      level: 8,
+    };
+    setMap(new kakao.maps.Map(container, options));
+  }, []);
 
   return (
     <div className="relative flex flex-row justify-center">
       <LocationButton />
       <SearchBar />
-      <MapContainer />
+      <MapContainer map={map} />
     </div>
   );
 }
