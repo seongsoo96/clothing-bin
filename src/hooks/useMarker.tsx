@@ -25,7 +25,7 @@ export default function useMarker(jsonString: string, map: any) {
     //   center: new kakao.maps.LatLng(37.566535, 126.97796919),
     //   level: 6,
     // };
-    // const map = new kakao.maps.Map(container, options);
+    // const map = new kakao.maps.Map(container, options)s;
     for (const coord of areaCoords) {
       const coords = new kakao.maps.LatLng(coord.y, coord.x);
       var markerImageUrl = "/images/blue_dot.png",
