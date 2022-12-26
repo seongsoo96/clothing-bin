@@ -32,7 +32,7 @@ import useMarker from "../hooks/useMarker";
 // import geumcheonCoords from "../assets/coordsGeumcheon.json";
 // import seochoCoords from "../assets/coordsSeocho.json";
 // import gangnamCoords from "../assets/coordsGangnam.json";
-// import jungnangCoords from "../assets/coordsJungnang.json";
+import jungnangCoords from "../assets/coordsJungnang.json";
 import allCoords from "../assets/coordsAll.json";
 
 const { kakao } = window;
