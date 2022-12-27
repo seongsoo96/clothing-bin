@@ -1,4 +1,3 @@
-import React, { useCallback, useEffect, useState } from "react";
 // import axios from "axios";
 // import gwanakJson from "../assets/gwanak.json";
 // import gwanakJson1 from "../assets/gwanak1.json";
@@ -17,8 +16,7 @@ import React, { useCallback, useEffect, useState } from "react";
 // import gangnam2 from "../assets/gangnam2.json";
 // import jungnang1 from "../assets/jungnang1.json";
 // import jungnang2 from "../assets/jungnang2.json";
-
-import useMarker from "../hooks/useMarker";
+// import useMarker from "../hooks/useMarker"
 
 // import gwanakCoords from "../assets/coordsGwanak.json";
 // import jongroCoords from "../assets/coordsJongro.json";
@@ -32,44 +30,17 @@ import useMarker from "../hooks/useMarker";
 // import geumcheonCoords from "../assets/coordsGeumcheon.json";
 // import seochoCoords from "../assets/coordsSeocho.json";
 // import gangnamCoords from "../assets/coordsGangnam.json";
-import jungnangCoords from "../assets/coordsJungnang.json";
-import allCoords from "../assets/coordsAll.json";
+// import jungnangCoords from "../assets/coordsJungnang.json";
+import { useCallback, useEffect, useState } from "react"
+import allCoords from "../assets/coordsAll.json"
 
-const { kakao } = window;
-declare global {
-  interface Window {
-    kakao: any;
-  }
-}
-interface IAddr {
-  address: {};
-  address_name: string;
-  address_type: string;
-  road_address: {};
-  x: string;
-  y: string;
-}
-
-interface IAddrs extends Array<IAddr> {}
-
-interface IJson {
-  위치: string;
-  의류수거함: string;
-}
-
-interface IJsons extends Array<IJson> {}
-
-interface IAreaCoords {
-  x: number;
-  y: number;
-}
-
-interface IAreaCoordsArr extends Array<IAreaCoords> {}
+const { kakao } = window
 
 export default function MapContainer({ map }: { map: any }) {
+  const [showRoadView, setShowRoadView] = useState(false)
   //   const [area, setArea] = useState(jungnang2.data);
-  const geocoder = new kakao.maps.services.Geocoder();
-  const hello: any = [];
+  // const geocoder = new kakao.maps.services.Geocoder()
+  // const hello: any = []
 
   // const gwanak = JSON.stringify(gwanakCoords);
   // const jongro = JSON.stringify(jongroCoords);
@@ -84,7 +55,7 @@ export default function MapContainer({ map }: { map: any }) {
   // const seocho = JSON.stringify(seochoCoords);
   // const gangnam = JSON.stringify(gangnamCoords);
   // const jungnang = JSON.stringify(jungnangCoords);
-  const all = JSON.stringify(allCoords);
+  // const all = JSON.stringify(allCoords)
 
   // const [map, setMap] = useState();
   // useEffect(() => {
@@ -108,7 +79,166 @@ export default function MapContainer({ map }: { map: any }) {
   // useMarker(seocho, map);
   // useMarker(gangnam, map);
   // useMarker(jungnang, map);
-  useMarker(all, map);
+  // useMarker(all, map)
+
+  // const areaCoords = JSON.parse(all)
+
+  const toggleOverlay = useCallback(
+    (active: boolean, marker: any) => {
+      if (active) {
+        setShowRoadView(!showRoadView)
+
+        // 지도 위에 로드뷰 도로 오버레이를 추가합니다
+        map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW)
+
+        // 지도 위에 마커를 표시합니다
+        marker.setMap(map)
+
+        // 마커의 위치를 지도 중심으로 설정합니다
+        marker.setPosition(map.getCenter())
+      } else {
+        setShowRoadView(!showRoadView)
+
+        map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW)
+
+        marker.setMap(null)
+      }
+    },
+    [map, showRoadView]
+  )
+
+  const addMarker = useCallback(
+    (coord: any) => {
+      const coords = new kakao.maps.LatLng(coord.y, coord.x)
+
+      let selectedMarker: any = null
+      const markerImageUrl = "/images/blue_dot.png",
+        markerImageSize = new kakao.maps.Size(20, 20),
+        markerImageOptions = {
+          offset: new kakao.maps.Point(10, 20),
+        }
+
+      const markerImage = new kakao.maps.MarkerImage(
+        markerImageUrl,
+        markerImageSize,
+        markerImageOptions
+      )
+
+      const marker = new kakao.maps.Marker({
+        map: map,
+        image: markerImage,
+        position: coords,
+      })
+
+      kakao.maps.event.addListener(marker, "click", function () {
+        if (!selectedMarker || selectedMarker !== marker) {
+          !!selectedMarker &&
+            selectedMarker.setImage(selectedMarker.normalImage)
+
+          // marker.setImage(clickImage)
+        }
+        selectedMarker = marker
+
+        const roadviewContainer = document.getElementById("roadview") //로드뷰를 표시할 div
+        const roadview = new kakao.maps.Roadview(roadviewContainer) //로드뷰 객체
+        const roadviewClient = new kakao.maps.RoadviewClient() //좌표로부터 로드뷰 파노ID를 가져올 로드뷰 helper객체
+        const position = selectedMarker.getPosition()
+
+        roadviewClient.getNearestPanoId(position, 50, function (panoId: any) {
+          roadview.setPanoId(panoId, position)
+        })
+        toggleOverlay(true, marker)
+
+        // 지도의 중심을 현재 로드뷰의 위치로 설정합니다
+        map.setLevel(1)
+        map.setCenter(position)
+
+        // 지도 위에 로드뷰 도로 오버레이가 추가된 상태이면
+        if (showRoadView) {
+          // 마커의 위치를 현재 로드뷰의 위치로 설정합니다
+          marker.setPosition(position)
+        }
+      })
+    },
+    [map, showRoadView, toggleOverlay]
+  )
+
+  useEffect(() => {
+    for (const coord of allCoords) {
+      addMarker(coord)
+
+      // const coords = new kakao.maps.LatLng(coord.y, coord.x)
+      // const markerImageUrl = "/images/blue_dot.png",
+      //   markerImageSize = new kakao.maps.Size(20, 20),
+      //   markerImageOptions = {
+      //     offset: new kakao.maps.Point(10, 20),
+      //   }
+
+      // const markerImage = new kakao.maps.MarkerImage(
+      //   markerImageUrl,
+      //   markerImageSize,
+      //   markerImageOptions
+      // )
+
+      // new kakao.maps.Marker({
+      //   map: map,
+      //   image: markerImage,
+      //   position: coords,
+      // })
+    }
+  }, [addMarker, map])
+
+  // 마커를 생성하고 지도 위에 표시하고, 마커에 mouseover, mouseout, click 이벤트를 등록하는 함수입니다
+  // function addMarker(coord: any) {
+  //   const coords = new kakao.maps.LatLng(coord.y, coord.x)
+
+  //   let selectedMarker: any = null
+  //   const markerImageUrl = "/images/blue_dot.png",
+  //     markerImageSize = new kakao.maps.Size(20, 20),
+  //     markerImageOptions = {
+  //       offset: new kakao.maps.Point(10, 20),
+  //     }
+
+  //   const markerImage = new kakao.maps.MarkerImage(
+  //     markerImageUrl,
+  //     markerImageSize,
+  //     markerImageOptions
+  //   )
+
+  //   const marker = new kakao.maps.Marker({
+  //     map: map,
+  //     image: markerImage,
+  //     position: coords,
+  //   })
+
+  //   // // 마커에 mouseover 이벤트를 등록합니다
+  //   // kakao.maps.event.addListener(marker, "mouseover", function () {
+  //   //   // 클릭된 마커가 없고, mouseover된 마커가 클릭된 마커가 아니면
+  //   //   // 마커의 이미지를 오버 이미지로 변경합니다
+  //   //   if (!selectedMarker || selectedMarker !== marker) {
+  //   //     marker.setImage(overImage)
+  //   //   }
+  //   // })
+
+  //   // // 마커에 mouseout 이벤트를 등록합니다
+  //   // kakao.maps.event.addListener(marker, "mouseout", function () {
+  //   //   // 클릭된 마커가 없고, mouseout된 마커가 클릭된 마커가 아니면
+  //   //   // 마커의 이미지를 기본 이미지로 변경합니다
+  //   //   if (!selectedMarker || selectedMarker !== marker) {
+  //   //     marker.setImage(normalImage)
+  //   //   }
+  //   // })
+
+  //   kakao.maps.event.addListener(marker, "click", function () {
+  //     if (!selectedMarker || selectedMarker !== marker) {
+  //       !!selectedMarker && selectedMarker.setImage(selectedMarker.normalImage)
+
+  //       // marker.setImage(clickImage)
+  //     }
+  //     selectedMarker = marker
+  //     console.log(marker)
+  //   })
+  // }
 
   //   useEffect(() => {
   //     const apiCall = async () => {
@@ -142,30 +272,15 @@ export default function MapContainer({ map }: { map: any }) {
         width: "100vw",
         height: "100vh",
       }}
-    ></div>
-  );
-}
-
-// 지도에 마커와 인포윈도우를 표시하는 함수입니다
-function displayMarker(locPosition: number, message: string, map: any) {
-  // 마커를 생성합니다
-  var marker = new kakao.maps.Marker({
-    map: map,
-    position: locPosition,
-  });
-
-  var iwContent = message, // 인포윈도우에 표시할 내용
-    iwRemoveable = true;
-
-  // 인포윈도우를 생성합니다
-  var infowindow = new kakao.maps.InfoWindow({
-    content: iwContent,
-    removable: iwRemoveable,
-  });
-
-  // 인포윈도우를 마커위에 표시합니다
-  infowindow.open(map, marker);
-
-  // 지도 중심좌표를 접속위치로 변경합니다
-  map.setCenter(locPosition);
+    >
+      {showRoadView ? (
+        <div
+          id="roadview"
+          className="w-80 h-80 border border-black absolute z-10"
+        ></div>
+      ) : (
+        <div id="roadview"></div>
+      )}
+    </div>
+  )
 }
