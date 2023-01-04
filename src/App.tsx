@@ -1,6 +1,10 @@
+import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { Map } from "react-kakao-maps-sdk"
+import { roadViewAtom } from "./atoms/roadViewAtom"
+import CloseRoadViewButton from "./components/CloseRoadViewButton"
 import LocationButton from "./components/LocationButton"
+import LocationButton2 from "./components/LocationButton2"
 import MapContainer from "./components/MapContainer"
 import MapContainer2 from "./components/MapContainer2"
 import SearchBar from "./components/SearchBar"
@@ -13,22 +17,18 @@ declare global {
 }
 
 function App() {
-  // const [map, setMap] = useState()
-  // useEffect(() => {
-  //   const container = document.getElementById("map")
-  //   const options = {
-  //     center: new kakao.maps.LatLng(37.566535, 126.97796919),
-  //     level: 8,
-  //   }
-  //   setMap(new kakao.maps.Map(container, options))
-  // }, [])
+  const showRoadView = useAtomValue(roadViewAtom)
 
   return (
-    <div id="container" className="relative flex flex-row justify-center">
-      {/* <LocationButton map={map} /> */}
+    <div
+      id="container"
+      className="relative h-screen flex flex-row justify-center"
+    >
+      {/* <LocationButton /> */}
       {/* <SearchBar /> */}
       {/* <MapContainer map={map} /> */}
       <MapContainer2 />
+      {!showRoadView ? <LocationButton2 /> : <CloseRoadViewButton />}
     </div>
   )
 }

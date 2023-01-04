@@ -1,4 +1,5 @@
-import React, { useState } from "react"
+import { useAtom, useSetAtom } from "jotai"
+import React, { useEffect, useRef, useState } from "react"
 import {
   CustomOverlayMap,
   Map,
@@ -7,16 +8,24 @@ import {
   Roadview,
 } from "react-kakao-maps-sdk"
 import allCoords from "../assets/coordsAll.json"
+import { centerAtom, levelAtom } from "../atoms"
+import { roadViewAtom } from "../atoms/roadViewAtom"
 
 export default function MapContainer2() {
-  const [isError, setIsError] = useState(false)
-  const [center, setCenter] = useState({
-    lat: 37.566535,
-    lng: 126.97796919,
-  })
-  const [showRoadView, setShowRoadView] = useState(false)
-  const [level, setLevel] = useState(7)
+  const [center, setCenter] = useAtom(centerAtom)
+  const [showRoadView, setShowRoadView] = useAtom(roadViewAtom)
+  const [level, setLevel] = useAtom(levelAtom)
   const [pan, setPan] = useState(0)
+  const [mapTypeRV, setMapTypeRV] = useState(false)
+  const [style, setStyle] = useState({
+    width: "100%",
+    height: "100%",
+    cursor: "grab",
+  })
+
+  const closeRoadView = () => {
+    setShowRoadView(false)
+  }
 
   const getAngleClassName = (angle: number) => {
     const threshold = 22.5 //이미지가 변화되어야 되는(각도가 변해야되는) 임계 값
@@ -35,69 +44,84 @@ export default function MapContainer2() {
       lat: marker.getPosition().getLat(),
       lng: marker.getPosition().getLng(),
     })
-    setLevel(3)
+    setLevel(7)
   }
 
   return (
     <>
-      <Map // 지도를 표시할 Container
-        center={{
-          ...center,
-        }}
-        className="w-screen h-screen"
-        level={level} // 지도의 확대 레벨
+      <div
+        onMouseOver={() => (showRoadView ? setMapTypeRV(true) : null)}
+        onMouseLeave={() => (showRoadView ? setMapTypeRV(false) : null)}
+        className={
+          "cursor-grab " +
+          (showRoadView
+            ? "w-[310px] h-[190px] z-20 !absolute bottom-0 left-0"
+            : "w-screen h-screen")
+        }
       >
-        {allCoords.map((position, index) => (
-          <MapMarker
-            key={`${position.lat}-${position.lng}-${index}`}
-            position={{ lat: Number(position.lat), lng: Number(position.lng) }} // 마커를 표시할 위치
-            onClick={clickMarker}
-            image={{
-              src: "/images/blue_dot.png", // 마커이미지의 주소입니다
-              size: {
-                width: 20,
-                height: 20,
-              },
-            }}
-          />
-        ))}
-        {showRoadView ? (
-          <>
-            <MapTypeId type={kakao.maps.MapTypeId.ROADVIEW} />
-            <CustomOverlayMap
-              position={center}
-              className={`MapWalker ${getAngleClassName(pan)}`}
-              yAnchor={1}
-            >
-              <div className={`angleBack`}></div>
-              <div className={"figure"}></div>
-            </CustomOverlayMap>
+        <Map // 지도를 표시할 Container
+          center={{
+            ...center,
+          }}
+          style={style}
+          level={level} // 지도의 확대 레벨
+          // ref={mapRef}
+        >
+          {allCoords.map((position, index) => (
             <MapMarker
-              position={center}
-              draggable={true}
-              onDragEnd={(marker) => {
-                setCenter({
-                  lat: marker.getPosition().getLat(),
-                  lng: marker.getPosition().getLng(),
-                })
-                setIsError(false)
-              }}
+              key={`${position.lat}-${position.lng}-${index}`}
+              position={{
+                lat: Number(position.lat),
+                lng: Number(position.lng),
+              }} // 마커를 표시할 위치
+              onClick={clickMarker}
               image={{
-                src: "https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview_minimap_wk_2018.png",
-                size: { width: 26, height: 46 },
-                options: {
-                  spriteSize: { width: 1666, height: 168 },
-                  spriteOrigin: { x: 705, y: 114 },
-                  offset: { x: 13, y: 46 },
+                src: "/images/gggg.png", // 마커이미지의 주소입니다
+                size: {
+                  width: 15,
+                  height: 15,
                 },
               }}
             />
-          </>
-        ) : null}
-      </Map>
+          ))}
+          {showRoadView ? (
+            <>
+              {mapTypeRV ? (
+                <MapTypeId type={kakao.maps.MapTypeId.ROADVIEW} />
+              ) : null}
+              <CustomOverlayMap position={center} yAnchor={1}>
+                <div className={`MapWalker ${getAngleClassName(pan)}`}>
+                  <div className={`angleBack`}></div>
+                  <div className={"figure"}></div>
+                </div>
+              </CustomOverlayMap>
+              <MapMarker
+                position={center}
+                draggable={true}
+                onDragEnd={(marker) => {
+                  setCenter({
+                    lat: marker.getPosition().getLat(),
+                    lng: marker.getPosition().getLng(),
+                  })
+                }}
+                image={{
+                  src: "https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview_minimap_wk_2018.png",
+                  size: { width: 26, height: 46 },
+                  options: {
+                    spriteSize: { width: 1666, height: 168 },
+                    spriteOrigin: { x: 705, y: 114 },
+                    offset: { x: 13, y: 46 },
+                  },
+                }}
+              />
+            </>
+          ) : null}
+        </Map>
+      </div>
       {showRoadView ? (
+        // <div className="w-full md:w-6/12 h-80 border border-black absolute bottom-0 z-10">
         <Roadview
-          className="w-6/12 h-80 border border-black absolute bottom-0 z-10"
+          className="w-full h-full"
           position={{ ...center, radius: 50 }}
           pan={pan}
           onViewpointChange={(roadview) => setPan(roadview.getViewpoint().pan)}
@@ -107,7 +131,6 @@ export default function MapContainer2() {
               lng: roadview.getPosition().getLng(),
             })
           }
-          onErrorGetNearestPanoId={() => setIsError(true)}
         ></Roadview>
       ) : null}
     </>
