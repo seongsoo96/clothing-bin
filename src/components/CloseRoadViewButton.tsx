@@ -1,11 +1,9 @@
 import { useSetAtom } from "jotai"
-import React, { useEffect, useState } from "react"
-import { Map, MapMarker } from "react-kakao-maps-sdk"
-import { centerAtom, levelAtom } from "../atoms"
 import { roadViewAtom } from "../atoms/roadViewAtom"
 
 export default function CloseRoadViewButton() {
   const setShowRoadView = useSetAtom(roadViewAtom)
+  // const setRoadViewStyle = useSetAtom(roadViewStyleAtom)
 
   const handleClick = () => {
     setShowRoadView(false)

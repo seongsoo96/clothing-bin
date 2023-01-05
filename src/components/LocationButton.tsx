@@ -1,24 +1,28 @@
-const { kakao } = window
+import { useSetAtom } from "jotai"
+import { centerAtom, levelAtom } from "../atoms"
 
 export default function LocationButton() {
+  const setCenter = useSetAtom(centerAtom)
+  const setLevel = useSetAtom(levelAtom)
   const handleClick = () => {
-    let lon = 126.570667
-    let lat = 33.450701
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-        lat = position.coords.latitude // 위도
-        lon = position.coords.longitude // 경도
-        // showMyLocation(new kakao.maps.LatLng(lat, lon))
-      })
-    } else {
-      //   showMyLocation(new kakao.maps.LatLng(lat, lon))
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          })
+          setLevel(2)
+        },
+        (err) => {
+          setCenter({
+            lat: 37.566535,
+            lng: 126.97796919,
+          })
+        }
+      )
     }
   }
-
-  //   function showMyLocation(position: number) {
-  //     map.setLevel(4)
-  //     map.setCenter(position)
-  //   }
 
   return (
     <div

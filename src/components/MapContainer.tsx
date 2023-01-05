@@ -1,155 +1,150 @@
-import { useCallback, useEffect, useState } from "react"
-import { Roadview } from "react-kakao-maps-sdk"
+import { useAtom, useAtomValue } from "jotai"
+import { useEffect, useRef, useState } from "react"
+import {
+  CustomOverlayMap,
+  Map,
+  MapMarker,
+  // MapTypeId,
+  Roadview,
+} from "react-kakao-maps-sdk"
 import allCoords from "../assets/coordsAll.json"
+import { centerAtom, levelAtom } from "../atoms"
+import { roadViewAtom } from "../atoms/roadViewAtom"
+import { roadViewStyleAtom } from "../atoms/roadViewStyleAtom"
 
-const { kakao } = window
-
-export default function MapContainer({ map }: { map: any }) {
-  const [showRoadView, setShowRoadView] = useState(false)
-  const [overlay, setOverlay] = useState(false)
-  const [pos, setPos] = useState({
-    lat: 33.450422139819736,
-    lng: 126.5709139924533,
-  })
-
-  const closeRoadView = useCallback(() => {
-    setShowRoadView(!showRoadView)
-    map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW)
-    setOverlay(false)
-  }, [map, showRoadView])
-
-  const openRoadView = useCallback(() => {
-    setShowRoadView(true)
-    map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW)
-    setOverlay(true)
-  }, [map])
-
-  const clickMarker = useCallback(
-    (selectedMarker: any) => {
-      const roadviewContainer = document.getElementById("roadview")
-      const roadview = new kakao.maps.Roadview(roadviewContainer)
-      const roadviewClient = new kakao.maps.RoadviewClient()
-      const position = selectedMarker.getPosition()
-      // setPos(position)
-
-      roadviewClient.getNearestPanoId(position, 50, function (panoId: any) {
-        roadview.setPanoId(panoId, position)
-      })
-      setPos(position)
-
-      if (overlay) {
-        closeRoadView()
-      }
-      openRoadView()
-
-      map.setLevel(1)
-      map.setCenter(position)
-
-      if (showRoadView) {
-        selectedMarker.setPosition(position)
-      }
-    },
-    [closeRoadView, map, openRoadView, overlay, showRoadView]
-  )
-
-  const addMarker = useCallback(
-    (coord: any) => {
-      const coords = new kakao.maps.LatLng(coord.y, coord.x)
-
-      let selectedMarker: any = null
-      const markerImageUrl = "/images/blue_dot.png",
-        markerImageSize = new kakao.maps.Size(20, 20),
-        markerImageOptions = {
-          offset: new kakao.maps.Point(10, 20),
-        }
-
-      const markerImage = new kakao.maps.MarkerImage(
-        markerImageUrl,
-        markerImageSize,
-        markerImageOptions
-      )
-
-      const marker = new kakao.maps.Marker({
-        map: map,
-        image: markerImage,
-        position: coords,
-      })
-
-      kakao.maps.event.addListener(marker, "click", function () {
-        selectedMarker = marker
-        clickMarker(selectedMarker)
-      })
-    },
-    [map, clickMarker]
-  )
+export default function MapContainer() {
+  const mapRef = useRef<kakao.maps.Map>()
+  const [center, setCenter] = useAtom(centerAtom)
+  const [showRoadView, setShowRoadView] = useAtom(roadViewAtom)
+  const [level, setLevel] = useAtom(levelAtom)
+  const [pan, setPan] = useState(0)
+  // const [mapTypeRV, setMapTypeRV] = useState(false)
+  const style = useAtomValue(roadViewStyleAtom)
 
   useEffect(() => {
-    for (const coord of allCoords) {
-      addMarker(coord)
+    const map = mapRef.current
+    if (map) map.relayout()
+  }, [style])
+
+  const getAngleClassName = (angle: number) => {
+    const threshold = 22.5 //이미지가 변화되어야 되는(각도가 변해야되는) 임계 값
+    for (var i = 0; i < 16; i++) {
+      //각도에 따라 변화되는 앵글 이미지의 수가 16개
+      if (angle > threshold * i && angle < threshold * (i + 1)) {
+        //각도(pan)에 따라 아이콘의 class명을 변경
+        return "m" + i
+      }
     }
-  }, [addMarker, map])
+  }
+
+  const clickMarker = (marker: kakao.maps.Marker) => {
+    setShowRoadView(true)
+    setCenter({
+      lat: marker.getPosition().getLat(),
+      lng: marker.getPosition().getLng(),
+    })
+    setLevel(2)
+  }
 
   return (
-    <div
-      id="map"
-      style={{
-        width: "100vw",
-        height: "100vh",
-      }}
-    >
-      {showRoadView ? (
-        // <div className="w-80 h-80 border border-black absolute bottom-0 z-10">
-        //   <div id="roadview" className="w-full h-full"></div>
-        //   <button
-        //     onClick={closeRoadView}
-        //     className="bg-white top-0 right-0 z-20 absolute"
-        //   >
-        //     닫기
-        //   </button>
-        // </div>
-        <Roadview // 로드뷰를 표시할 Container
-          position={{
-            ...pos,
-            radius: 50,
+    <>
+      <div
+        className={
+          "cursor-grab " +
+          (showRoadView
+            ? "w-[310px] h-[190px] z-20 !absolute bottom-0 left-0"
+            : "w-screen h-screen")
+        }
+      >
+        <Map
+          center={{
+            ...center,
           }}
-          className="w-80 h-80 border border-black absolute bottom-0 z-10"
-          // style={{
-          //   // 지도의 크기
-          //   width: "100%",
-          //   height: "450px",
-          // }}
-        />
-      ) : (
-        <div>
-          <div id="roadview"></div>
-        </div>
-      )}
-    </div>
+          style={style}
+          level={level}
+        >
+          {showRoadView ? (
+            <MapMarker
+              position={{
+                lat: Number(center.lat),
+                lng: Number(center.lng),
+              }}
+              image={{
+                src: "/images/gggg.png",
+                size: {
+                  width: 15,
+                  height: 15,
+                },
+              }}
+            />
+          ) : (
+            allCoords.map((position, index) => (
+              <MapMarker
+                key={`${position.lat}-${position.lng}-${index}`}
+                position={{
+                  lat: Number(position.lat),
+                  lng: Number(position.lng),
+                }}
+                onClick={clickMarker}
+                image={{
+                  src: "/images/gggg.png",
+                  size: {
+                    width: 15,
+                    height: 15,
+                  },
+                }}
+              />
+            ))
+          )}
+          {showRoadView ? (
+            <>
+              {/* {mapTypeRV ? (
+                <MapTypeId type={kakao.maps.MapTypeId.ROADVIEW} />
+              ) : null} */}
+              <CustomOverlayMap position={center} yAnchor={1}>
+                <div className={`MapWalker ${getAngleClassName(pan)}`}>
+                  <div className={`angleBack`}></div>
+                  <div className={"figure"}></div>
+                </div>
+              </CustomOverlayMap>
+              <MapMarker
+                position={center}
+                draggable={true}
+                onDragEnd={(marker) => {
+                  setCenter({
+                    lat: marker.getPosition().getLat(),
+                    lng: marker.getPosition().getLng(),
+                  })
+                }}
+                image={{
+                  src: "https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview_minimap_wk_2018.png",
+                  size: { width: 26, height: 46 },
+                  options: {
+                    spriteSize: { width: 1666, height: 168 },
+                    spriteOrigin: { x: 705, y: 114 },
+                    offset: { x: 13, y: 46 },
+                  },
+                }}
+              />
+            </>
+          ) : null}
+        </Map>
+      </div>
+      {showRoadView ? (
+        <Roadview
+          className="w-full h-full"
+          position={{ ...center, radius: 50 }}
+          pan={pan}
+          zoom={-3}
+          onViewpointChange={(roadview) => setPan(roadview.getViewpoint().pan)}
+          onPositionChanged={(roadview) =>
+            setCenter({
+              lat: roadview.getPosition().getLat(),
+              lng: roadview.getPosition().getLng(),
+            })
+          }
+        ></Roadview>
+      ) : null}
+    </>
   )
-}
-
-//지도위에 현재 로드뷰의 위치와, 각도를 표시하기 위한 map walker 아이콘 생성 클래스
-function MapWalker(this: any, position: any) {
-  //커스텀 오버레이에 사용할 map walker 엘리먼트
-  var content = document.createElement("div")
-  var figure = document.createElement("div")
-  var angleBack = document.createElement("div")
-
-  //map walker를 구성하는 각 노드들의 class명을 지정 - style셋팅을 위해 필요
-  content.className = "MapWalker"
-  figure.className = "figure"
-  angleBack.className = "angleBack"
-
-  content.appendChild(angleBack)
-  content.appendChild(figure)
-
-  //커스텀 오버레이 객체를 사용하여, map walker 아이콘을 생성
-  var walker = new kakao.maps.CustomOverlay({
-    position: position,
-    content: content,
-    yAnchor: 1,
-  })
-
-  this.walker = walker
-  this.content = content
 }
