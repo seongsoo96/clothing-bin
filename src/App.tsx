@@ -4,7 +4,7 @@ import { roadViewAtom } from "./atoms/roadViewAtom"
 import CloseRoadViewButton from "./components/CloseRoadViewButton"
 import LocationButton from "./components/LocationButton"
 import MapContainer from "./components/MapContainer"
-import SearchBar from "./components/SearchBar"
+import HowToUse from "./components/HowToUse"
 import SkeletonMap from "./components/SkeletonMap"
 
 function App() {
@@ -15,8 +15,7 @@ function App() {
       id="container"
       className="relative h-screen flex flex-row justify-center"
     >
-      {/* <SkeletonMap /> */}
-      <SearchBar />
+      <HowToUse />
       <Suspense fallback={<SkeletonMap />}>
         <MapContainer />
       </Suspense>

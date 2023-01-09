@@ -1,10 +1,9 @@
 import { useAtom, useAtomValue } from "jotai"
-import { memo, useState, useEffect } from "react"
+import { memo, useState } from "react"
 import {
   CustomOverlayMap,
   Map,
   MapMarker,
-  // MapTypeId,
   Roadview,
 } from "react-kakao-maps-sdk"
 import allCoords from "../assets/coordsAll.json"
@@ -72,10 +71,6 @@ export default function MapContainer() {
       lng: Number(marker.getPosition().getLng()),
     })
   }
-
-  useEffect(() => {
-    return () => console.log("???s")
-  }, [])
 
   return (
     <>

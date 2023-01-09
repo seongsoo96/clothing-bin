@@ -3,7 +3,6 @@ import { roadViewAtom } from "../atoms/roadViewAtom"
 
 export default function CloseRoadViewButton() {
   const setShowRoadView = useSetAtom(roadViewAtom)
-  // const setRoadViewStyle = useSetAtom(roadViewStyleAtom)
 
   const handleClick = () => {
     setShowRoadView(false)
