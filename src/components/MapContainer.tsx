@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue } from "jotai"
-import { useEffect, useRef, useState } from "react"
+import { memo, useState, useEffect } from "react"
 import {
   CustomOverlayMap,
   Map,
@@ -12,19 +12,42 @@ import { centerAtom, levelAtom } from "../atoms"
 import { roadViewAtom } from "../atoms/roadViewAtom"
 import { roadViewStyleAtom } from "../atoms/roadViewStyleAtom"
 
+const PaintingMarker = memo(
+  ({ clickMarker }: { clickMarker: (marker: kakao.maps.Marker) => void }) => {
+    return (
+      <>
+        {allCoords.map((position, index) => (
+          <MapMarker
+            key={`${position.lat}-${position.lng}-${index}`}
+            position={{
+              lat: Number(position.lat),
+              lng: Number(position.lng),
+            }}
+            onClick={clickMarker}
+            image={{
+              src: "/images/gggg.png",
+              size: {
+                width: 15,
+                height: 15,
+              },
+            }}
+          />
+        ))}
+      </>
+    )
+  }
+)
+
 export default function MapContainer() {
-  const mapRef = useRef<kakao.maps.Map>()
   const [center, setCenter] = useAtom(centerAtom)
   const [showRoadView, setShowRoadView] = useAtom(roadViewAtom)
   const [level, setLevel] = useAtom(levelAtom)
   const [pan, setPan] = useState(0)
-  // const [mapTypeRV, setMapTypeRV] = useState(false)
   const style = useAtomValue(roadViewStyleAtom)
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (map) map.relayout()
-  }, [style])
+  const [clickedMarkerPos, setClickedMarkerPos] = useState({
+    lat: 37.566535,
+    lng: 126.97796919,
+  })
 
   const getAngleClassName = (angle: number) => {
     const threshold = 22.5 //이미지가 변화되어야 되는(각도가 변해야되는) 임계 값
@@ -44,30 +67,30 @@ export default function MapContainer() {
       lng: marker.getPosition().getLng(),
     })
     setLevel(2)
+    setClickedMarkerPos({
+      lat: Number(marker.getPosition().getLat()),
+      lng: Number(marker.getPosition().getLng()),
+    })
   }
+
+  useEffect(() => {
+    return () => console.log("???s")
+  }, [])
 
   return (
     <>
-      <div
-        className={
-          "cursor-grab " +
-          (showRoadView
-            ? "w-[310px] h-[190px] z-20 !absolute bottom-0 left-0"
-            : "w-screen h-screen")
-        }
-      >
+      <div className={style}>
         <Map
           center={{
             ...center,
           }}
-          style={style}
+          style={{ width: "100%", height: "100%", cursor: "grab" }}
           level={level}
         >
           {showRoadView ? (
             <MapMarker
               position={{
-                lat: Number(center.lat),
-                lng: Number(center.lng),
+                ...clickedMarkerPos,
               }}
               image={{
                 src: "/images/gggg.png",
@@ -78,29 +101,11 @@ export default function MapContainer() {
               }}
             />
           ) : (
-            allCoords.map((position, index) => (
-              <MapMarker
-                key={`${position.lat}-${position.lng}-${index}`}
-                position={{
-                  lat: Number(position.lat),
-                  lng: Number(position.lng),
-                }}
-                onClick={clickMarker}
-                image={{
-                  src: "/images/gggg.png",
-                  size: {
-                    width: 15,
-                    height: 15,
-                  },
-                }}
-              />
-            ))
+            <PaintingMarker clickMarker={clickMarker} />
           )}
+
           {showRoadView ? (
             <>
-              {/* {mapTypeRV ? (
-                <MapTypeId type={kakao.maps.MapTypeId.ROADVIEW} />
-              ) : null} */}
               <CustomOverlayMap position={center} yAnchor={1}>
                 <div className={`MapWalker ${getAngleClassName(pan)}`}>
                   <div className={`angleBack`}></div>
@@ -132,7 +137,7 @@ export default function MapContainer() {
       </div>
       {showRoadView ? (
         <Roadview
-          className="w-full h-full"
+          className="w-full md:h-full h-2/3"
           position={{ ...center, radius: 50 }}
           pan={pan}
           zoom={-3}
